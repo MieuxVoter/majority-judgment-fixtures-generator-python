@@ -3,11 +3,11 @@
 ## Majority Judgment Data testing
 A program to generate *.yml files with input, configuration and output.  
 Input such as ballots, candidates  
-Configutaion as different entry parameters  
+Configuration as different entry parameters  
 Output as ranks, majoritygrades, constestationgroupsize  
 
 
-### Specification format (commentary will be avoided)
+### Specification format (commentary will be skiped)
 
 ```
 # Grades are usually sorted from "worst" to "best".
@@ -54,7 +54,7 @@ tests:
     - …
 ```
 	
-### Programs used to generate files
+### Programs used to generate test files
 - python majority judgment algorithm package : TBD
 - python class to generate yml dump : TBD
 
