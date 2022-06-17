@@ -55,6 +55,6 @@ tests:
 ```
 	
 ### Programs used to generate files
-- **python majority judgment algorithm package : TBD
-- **python class to generate yml dump : TBD
+- python majority judgment algorithm package : TBD
+- python class to generate yml dump : TBD
 
