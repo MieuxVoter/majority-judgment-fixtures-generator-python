@@ -1,10 +1,10 @@
 # majority-judgment-fixtures-generator-python
 
 ## Majority Judgment Data testing
-A program to generate *.yml files with input, configuration and output.
-Input such as ballots, candidates
-Configutaion as different entry parameters
-Output as ranks, majoritygrades, constestationgroupsize
+A program to generate *.yml files with input, configuration and output.  
+Input such as ballots, candidates  
+Configutaion as different entry parameters  
+Output as ranks, majoritygrades, constestationgroupsize  
 
 
 ### Specification format (commentary will be avoided)
