@@ -1,178 +1,138 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Jan 15 23:34:39 2022
-
-@author: Rémy Poulain
-adapted by Pierre Puchaud 10 Fev 2022
-"""
-
-import matplotlib.pyplot as plt
-import numpy as np
-import csv
-
-from matplotlib.lines import Line2D
-import matplotlib.patches as patches
-import os
-
-from typing import Dict, List, Union
+from typing import Dict, List, TypeVar, Protocol, Iterator
+from abc import abstractmethod
+from itertools import accumulate, groupby
+from operator import itemgetter
 
 
-def majority_judgment(data: Dict[str, List[Union[int, float]]] = None, reverse: bool = False):
+class Comparable(Protocol):
+    """Protocol for annotating comparable types."""
+
+    @abstractmethod
+    def __lt__(self, other) -> bool:
+        pass
+
+
+Vote = TypeVar("Vote", bound=Comparable)
+Candidate = TypeVar("Candidate")
+
+
+def majority_judgment(
+    votes_by_candidate: Dict[Candidate, List[Vote]], reverse: bool = False
+) -> Dict[Candidate, int]:
     """
-    apply majority judgment
+    Rank a tally using majority judgment
 
     Parameters
     ----------
-    data: Dict[str, List[Union[int, float]]
+    votes_by_candidate: Dict[Candidate, List[Vote]]
         Results of the votes
-        str correspond to the names of candidates, List of int is the number for each grades
+        Candidate correspond to the names of candidates,
+        List of int is the votes for each candidates.
+        The higher the vote, the better.
+
     reverse: bool
-        if you want to flip the grades order
+        If true, a lower vote value indicates a better vote.
+
     Returns
     -------
-        Rank order for each candidates in a Dictionary Dict[str, rank: int]
-        best_grades Dict[str, grade: int]
+        Rank order for each candidates in a Dictionary Dict[Candidate, rank: int]
+
+
+    >>> A = [0,0,0, 1,1, 2,2, 3,3,3]
+    >>> B = [0,0, 1,1,2,2,2,2,3,3]
+    >>> majority_judgment({'A': A, 'B': B}, reverse=False)
+    {'B': 0, 'A': 1}
+    >>> majority_judgment({'A': A, 'B': B}, reverse=True)
+    {'A': 0, 'B': 1}
     """
-    if reverse:
-        data = {x: l[::-1] for x, l in data.items()}
-    snbvot = {round(sum(x), 2) for x in data.values()}
+    set_num_votes = {len(votes) for votes in votes_by_candidate.values()}
+    if not len(set_num_votes) == 1:
+        raise NotImplementedError("Unbalanced grades have not been implemented yet.")
 
-    #print('data.values()', data.values())
-    #print('snbvot', snbvot)
-    #print('total_votes', list(snbvot)[0])
+    majority_values = {
+        candidate: list(compute_majority_values(votes))
+        for candidate, votes in votes_by_candidate.items()
+    }
+    ranked_scores = sorted(
+        majority_values.items(), key=itemgetter(1), reverse=not reverse
+    )
 
-    total_votes = list(snbvot)[0]
-    if not len(snbvot) == 1:
-        raise ValueError("note the same number of vote for each candidate")
+    ranking = {
+        candidate: ranking for ranking, (candidate, _) in enumerate(ranked_scores)
+    }
 
-    cumulative_sum = {x: np.cumsum(y) / total_votes for x, y in data.items()}
-
-    #print('cumulative_sum mid', cumulative_sum)
-
-    # compute median indexes
-    median_grades = {x: best_grade(l) for x, l in cumulative_sum.items()}
-
-    #print('median_grades mid', median_grades)
-
-    # best one
-    best_grade_mm = sorted(median_grades.values())[-1]
-
-    majority = {x: fmajorit(median_grades, total_votes, x, r) for x, r in data.items()}
-    bests = sorted(majority.items(), key=lambda x: x[1][1])[::-1]
-
-    # as written by Fabre in fact it is just necessary to compare the modified note
-    ranking = {x[0]: i + 1 for i, x in enumerate(bests)}
-
-    return ranking, median_grades
+    return ranking
 
 
-def best_grade(l: List):
+def median_grade(seq: List[float]) -> int:
     """
     Evaluates the best grades
 
     Parameters
     ----------
-    l: List
+    seq: List[float]
         The list of the cumulative sum from 0 to 1
+
     Returns
     -------
-    The median grade
+    The index of the median grade
+
+    >>> median_grade([0.1, 0.5, 0.7, 1.0])
+    1
+    >>> median_grade([0.1, 0.3, 1.0])
+    2
     """
-    for i, x in enumerate(l):
-        if x > 0.5:  # todo: ici ça peut être >= , need to handle pair and not pair cases.
+    assert all(s >= 0 for s in seq), seq
+    assert seq[-1] == 1, "Normalize the sequence first"
+
+    for i, x in enumerate(seq[:-1]):
+        if x >= 0.5:
             return i
+    return len(seq) - 1
 
 
-def fmajorit(index_median: Dict[str, int], nbvot: int, candidate: str, grades: List[int]):
+def compute_majority_values(votes: List[Vote]) -> Iterator[Vote]:
     """
-    Rank each candidate according to
-    # https://fr.wikipedia.org/wiki/M%C3%A9thode_de_meilleure_m%C3%A9diane#cite_note-Fabre20-3
+    Compute iteratively the median grades.
 
     Parameters
     ----------
-    index_median: Dict[str, int]
-        The dictionary of candidate and its median grade
-    nbvot: int
-        The total number of votes
-    candidate: str
-        The considered candidate
-    grades: List[int]
-        The list number of grades for the given candidat
+    votes: list of all grade values obtained for a given candidate.
 
     Returns
     -------
-    A list which contains
-    i: alpha the index corresponding to the majority grade
-    m: "enhanced" grade
-    p: rate of sponsors, size at the left
-    q: rate of opponents, size at the right
-    b: boolean = True if more sponsors than opponents
-    d: bonus / malus function of p and q
-    e: the number of votes to pass to get the next grade
-    i2: index of the next grade
+    Iterator of the next majority value
+
+    Examples from MJ book (1.5):
+
+    >>> list(compute_majority_values([7, 11, 9, 9, 11]))
+    [9, 9, 11, 7, 11]
+    >>> list(compute_majority_values([8, 11, 9, 9, 10]))
+    [9, 9, 10, 8, 11]
     """
-    i = index_median[candidate]
-    q = sum(grades[:i]) / nbvot
-    p = sum(grades[i + 1 :]) / nbvot
-    b = p > q
-    m = i
-    if b:
-        d = p
-        i2 = i + 1
-    else:
-        d = -q
-        i2 = i - 1
-    m += d
-    e = min(nbvot / 2 + 1 - sum(grades[:i]), sum(grades[: (i + 1)]) - (nbvot / 2))
-    e = int(e * 2)
+    grades = convert_votes_to_tally(votes)
+    keys = list(grades.keys())
+    num_votes = len(votes)
 
-    return [i, m, p, q, b, d, e, i2]
+    for _ in range(num_votes):
+        total = sum(grades.values())
+        cumsum = list(accumulate(grades.values()))
+        cumsum = [v / total for v in cumsum]
+
+        idx = median_grade(cumsum)
+        key = keys[idx]
+        yield key
+
+        # remove median grade
+        grades[key] -= 1
+        assert grades[key] > -1
 
 
-def scoring(index_median: Dict[str, int], nbvot: int, candidate: str, grades: List[int]):
+def convert_votes_to_tally(votes: List[Vote]) -> Dict[Vote, int]:
     """
-    rank using the method writen in the 'La recherche' from 2012 and add some elements to the precedent method
-    score is a ranking going from 10 to 91 (in the case of 7 mentions)
-    Parameters
-    ----------
-    index_median: Dict[str, int]
-        The dictionary of candidate and its median grade
-    nbvot: int
-        The total number of votes
-    candidate: str
-        The considered candidate
-    grades: List[int]
-        The list number of grades for the given candidat
+    Convert the frequency of each grade as a sorted dictionary.
 
-    Returns
-    -------
-        Score
+    >>> convert_votes_to_tally([7, 11, 9, 9, 11])
+    {7: 1, 9: 2, 11: 2}
     """
-
-    i = index_median[candidate]
-
-    prc = list(grades)
-
-    for nb, val in enumerate(prc):
-        prc[nb] = 100 * val / nbvot
-
-    sum1 = 0
-    sum2 = 0
-    bonus = 0
-    for nb, val in enumerate(prc):
-        if nb < i:
-            sum1 += val
-        elif nb > i:
-            sum2 += val
-    if sum1 == sum2:
-        bonus = 1
-    elif sum1 < sum2:
-        bonus = 2
-    if bonus == 2:
-        ballotage = sum2 / 100
-    else:
-        ballotage = (100 - sum1) / 100
-    score = (i + 1) * 10 + bonus + ballotage
-
-    return score
+    return {key: len(list(group)) for key, group in groupby(sorted(votes))}
