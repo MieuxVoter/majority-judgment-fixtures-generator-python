@@ -9,10 +9,6 @@ data = {'Pizza': [3, 2, 2, 3], 'Chips': [2, 4, 2, 2], 'Pasta': [3, 2, 3, 2], 'Br
 
 print('*****************************')
 print(data)
-#ranking, median_grades = majority_judgment.majority_judgment( data )
-#print('ranking', ranking)
-#print('median_grades', median_grades)
-
 
 print('*****************************')
 

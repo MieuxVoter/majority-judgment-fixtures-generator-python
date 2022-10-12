@@ -1,23 +1,12 @@
 import random
-from typing import List
 import majority_judgment
-
-import yaml
-
-import sys
+import os
 import ruamel.yaml
-from ruamel.yaml.comments import CommentedMap
-
-
-# Number of spaces for an indent 
-INDENTATION = 2 
-
-# Used to reset comment objects
-tsRESET_COMMENT_LIST = [None, [], None, None]
-
 
 class MajorityJugment_Sample:
-
+    
+    random.seed(10)
+    
     def __init__(self, nb_ballot=random.randint(1, 11), nb_candidate=random.randint(1, 5), max_vote_value=5):
 
         # hypothesis parameters
@@ -33,18 +22,23 @@ class MajorityJugment_Sample:
 
         # other input parameters - TBD
         self.title = '"Simple usage with {} ballots and {} candidates"'.format(self.nb_ballot, self.nb_candidate)
-        self.algorithm = 'mj'
-        self.favorContestation = 'true'
-        self.normalizer1 = 'static (0)'
-        self.normalizer2 = 'median'
-        self.normalizer3 = 'stretch'
 
-        # output parameters (empty while generating test) - TBD
-        self.MajoritGrades = ''
-        self.secondMajorityGrades = ''
-        self.contestationGroupSizes = ''
-        self.analysis1 = ''
-        self.analysis2 = ''
+        # MJ, MJ Favre+, MJ Favre-
+        self.algorithm = 'MJ'
+
+
+        #Maybe later...
+
+        #self.favorContestation = 'true'
+        #self.normalizer1 = 'static (0)'
+        #self.normalizer2 = 'median'
+        #self.normalizer3 = 'stretch'
+        #output parameters (empty while generating test) - TBD
+        #self.MajoritGrades = ''
+        #self.secondMajorityGrades = ''
+        #self.contestationGroupSizes = ''
+        #self.analysis1 = ''
+        #self.analysis2 = ''
 
     def majority_judgment_result(self):
 
@@ -55,7 +49,7 @@ class MajorityJugment_Sample:
         # generating data
 
         # initialization to 0
-        vote_ag_candidates = dict((str(i+1), [0] * (self.nb_ballot) ) for i in range(self.nb_candidate))
+        vote_aggr_candidates = dict((str(i+1), [0] * (self.nb_ballot) ) for i in range(self.nb_candidate))
 
         # fill with different votes order by values
         # ex:
@@ -65,102 +59,66 @@ class MajorityJugment_Sample:
         #     'Pasta': [0,0,1,1,1,2,2,3,3,3],
         #     'Bread': [0,0,1,1,1,1,2,2,2,3],
         # }
-
         for idx_ballot, ballot in enumerate(self.ballots):
             for idx_candidate, vote in enumerate(ballot):
-                vote_ag_candidates[str(idx_candidate+1)][idx_ballot] = vote
-        
-        for candidate in vote_ag_candidates:
-            vote_ag_candidates[candidate].sort()
-
-        print("vote_ag_candidates", vote_ag_candidates)
+                vote_aggr_candidates[str(idx_candidate+1)][idx_ballot] = vote
+        for candidate in vote_aggr_candidates:
+            vote_aggr_candidates[candidate].sort()
 
         # calling majority_judgment.py algorithm
-        self.ranking = majority_judgment.majority_judgment( vote_ag_candidates )
-        # self.median_grades = majority_judgment.median_grade
-        self.median_grades = ''
-        
-        return self.ranking, self.median_grades
+        self.ranking = majority_judgment.majority_judgment( vote_aggr_candidates )
 
-    def export_to_yaml(self):
-        dico_test = CommentedMap(
-                {'tests':{
-                'title': self.title,
-                'ballots': self.ballots,
-                'tallies': self.tallies,
-                'ranks': self.ranking,
-                'majorityGrades': self.median_grades
-                }
-            })
-        yaml = ruamel.yaml.YAML(typ=['rt', 'string'])
-        #yaml = ruamel.yaml.YAML(typ=['unsafe', 'string'])
-        #yaml = ruamel.yaml.YAML(typ='rt')
-        yaml = ruamel.yaml.YAML(typ='unsafe')
-        #yaml = ruamel.yaml.YAML(typ='safe')
-        yaml.version = (1, 2)
-        #yaml.allow_unicode=True
-        #yaml.explicit_start=True
+        # maybe later...
+        # self.median_grades = ''
+        #return self.ranking, self.median_grades
 
-        dico_test = {'tests':MV.__dict__}
-        #return ruamel.yaml.dump(dico_test, sys.stdout, allow_unicode=True, explicit_start=True, version=(1, 2))
+        return self.ranking
 
-        return yaml.dump(dico_test, sys.stdout)
-        #return ruamel.yaml.round_trip_dump(dico_test, sys.stdout)
+    def export_to_yaml(self, filename = "test.yml"):
 
-def _reverse_2d_list(list_2d: List[List]) -> List[List]:
-    lengths = [len(x) for x in list_2d]
-    if not len(set(lengths)) == 1:
-        raise ValueError('Please provide a square matrix')
-    
-    sub_length = lengths[0]
-    length = len(list_2d)
-    
-    return [[list_2d[i][j] for i in range(length)] for j in range(sub_length)]
+        yaml = ruamel.yaml.YAML(typ='safe')
 
-def yml_dump(yaml_content):
+        # get the current script path, subdir, filepath
+        here = os.path.dirname(os.path.realpath(__file__))
+        subdir = "Releases"
+        filepath = os.path.join(here, subdir, filename)
 
-    testset = yaml.safe_load(yaml_content)
+        # export yml dump in file
+        with open(os.path.expanduser(filepath), 'w') as f:
+            yaml.dump(MV.__dict__, f)
 
-    for name, item in testset.items():
-        print('Testing', name)
-        
-        if item['algorithm'] != 'mj':
-            raise NotImplementedError()
-        
-        candidates = list(range(1, 1 + item['numCandidates']))
-        
-        ballots = _reverse_2d_list(item['ballots'])
-        votes = dict(zip(candidates, ballots))
-        ranking = majority_judgment(votes)
-        for c, r in ranking.items():
-            ranking[c] += 1
-        
-        true_ranking = dict(zip(candidates, item['ranking']))
-        
-        assert ranking == true_ranking, (ranking, true_ranking)
-
+        # terminal print
+        # return yaml.dump(MV.__dict__, sys.stdout)
 
 if __name__ == '__main__':
 
-    MV = MajorityJugment_Sample(3, 4)
-    print(MV.ballots)
+    ### generating files
+
+    random.seed(1)
+
+    # loop paramters
+    max_iter_all = 10
+    max_iter_ballots_iter = 50
+    max_iter_ballots_iter_step = 3
+    max_iter_candidate = 5
+    max_vote_value = 10
     
-    print('******************')
-    print ('MV dict',  {'test':MV.__dict__})
+    for nb_ballot in range(1, max_iter_ballots_iter, max_iter_ballots_iter_step):
+        for nb_candidate in range(1, max_iter_candidate+1):
+            for max_vote_value in range(1, max_vote_value+1):
+                for iter in range(1, max_iter_all):
 
-    print('******************')
-    ranking, median_grades = MV.majority_judgment_result()
-    print('ranking', ranking)
-    print('median_grades', median_grades)
+                    # generating random ballots
+                    MV = MajorityJugment_Sample(nb_ballot, nb_candidate, max_vote_value)
 
-    print('******************')
-    dump = MV.export_to_yaml()
-    print(dump)
+                    # calculate ranking
+                    MV.majority_judgment_result()
 
-    #print('******************')
-    #data = {'tests':MV.__dict__}
-
-    #yaml = ruamel.yaml.YAML(typ='unsafe')
-    #print(yaml.dump(data, sys.stdout))
-
-
+                    # export to yml files in subdirectory "export_to_yaml:Releases"
+                    filename = 'test_bal' + str(nb_ballot) + "_cand" + str(nb_candidate) \
+                        + "_voteval" + str(max_vote_value) + "_iter" + str(iter) + '.yml'
+                    print( "generating " + filename)
+                    print(MV.ballots)
+                    print(MV.ranking)
+                    MV.export_to_yaml( filename )
+    
