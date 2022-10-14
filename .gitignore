@@ -1,0 +1,15 @@
+.ipynb_checkpoints
+*.jpg
+*.txt
+.cache*
+lightning_logs/
+.mypy_cache
+*.sif
+dataset
+*.pyc
+__pycache__
+.DS_Store
+._.DS_Store
+*.pkl
+.env/
+

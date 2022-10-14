@@ -1,36 +1,39 @@
-# majority-judgment-fixtures-generator-python
+# Majority Judgment Data testing
 
-## Majority Judgment Data testing
-A program to generate *.yml files 
+This is generating a set of `*.yml` files for testing librairies.
+The set of files can be find on the Releases.
 
-### Specification format (example)
 
-```
+## Specification format (example)
+
+To compare your implementation, you need to produce files in the same format. See for example that one:
+
+```yaml
+algorithm: 
+  name: majority_judgment
+  options: {}
 ballots:
 - [0, 3, 2]
 - [2, 5, 2]
 - [1, 1, 5]
 - [5, 3, 5]
-max_vote_value: 5
-nb_ballot: 4
-nb_candidate: 3
-ranking: {'1': 2, '2': 0, '3': 1}
-tallies:
-- [0, 2, 1, 5]
-- [3, 5, 1, 3]
-- [2, 2, 5, 5]
-title: '"Simple usage with 4 ballots and 3 candidates"'
-
+ranking: {1: 2, 2: 0, 3: 1}
 ```
 
-### majority_judgment.py
-resolving ranking algorithm by PL
 
-### MV_Generate_test.py
-generating yml files
-radomly votes
-main with loop of nb ballots, nb candidates, max vote values
-files test_bal<X>_cand<X>_voteval<X>_iter<X>.yml generated in Relesases subfolder --> to be changed for GIT release
+## Local development
 
-### test_algo.py
-simply to test majority_judgment
+Create a virtual environment and install dependencies:
+
+```bash
+python -m venv .env
+source .env/bin/activate
+pip install -r requirements.txt
+```
+
+Now, you can generate files
+
+```bash
+python generate_test.py --output /path/to/tests/
+```
+
