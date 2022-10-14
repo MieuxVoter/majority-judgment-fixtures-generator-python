@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: '3.10'
       - name: Install dependencies
-        run: pip install 
+        run: pip install -r requirements.txt
       - name: Build test fixtures
         run: python generate_test.py --output tests
       - name: Share artifact inside workflow
