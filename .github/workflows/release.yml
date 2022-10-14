@@ -29,11 +29,17 @@ jobs:
         run: pip install -r requirements.txt
       - name: Build test fixtures
         run: python generate_test.py --output tests
+      # Zip the build using external action
+      - name: Zip build
+        uses: thedoctor0/zip-release@master
+        with:
+          filename: text-fixtures.zip
+          path: ./tests.zip
       - name: Share artifact inside workflow
         uses: actions/upload-artifact@v2
         with:
           name: plugin-build
-          path: ./tests
+          path: ./tests.zip
             
   release:
     runs-on: ubuntu-latest
@@ -44,22 +50,16 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: plugin-build
-      # Zip the build using external action
-      - name: Zip build
-        uses: thedoctor0/zip-release@master
-        with:
-          filename: text-fixtures.zip
-          path: plugin-build
       # Upload as an artifact of the current workflow
       - name: Upload build zip artifact
         uses: actions/upload-artifact@v1
         with:
-          name: majority-judgment.zip
-          path: majority-judgment.zip
+          name: tests.zip
+          path: tests.zip
       # Make official GitHub release which will trigger
       # sending the mail with link for access
       - name: Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: test-fixtures.zip
+          artifacts: tests.zip
           token: ${{ secrets.GITHUB_TOKEN }}
