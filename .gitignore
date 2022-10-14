@@ -1,6 +1,5 @@
 .ipynb_checkpoints
 *.jpg
-*.txt
 .cache*
 lightning_logs/
 .mypy_cache

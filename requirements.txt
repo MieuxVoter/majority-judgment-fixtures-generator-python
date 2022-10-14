@@ -1,0 +1,4 @@
+ruamel.yaml
+git+https://github.com/MieuxVoter/majority-judgment-library-python@main
+typed-argument-parser
+tqdm
