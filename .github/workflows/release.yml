@@ -40,7 +40,7 @@ jobs:
         with:
           name: plugin-build
           path: ./tests.zip
-     - name: Release
+      - name: Release
         uses: ncipollo/release-action@v1
         with:
           artifacts: tests.zip
