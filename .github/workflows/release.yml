@@ -33,8 +33,8 @@ jobs:
       - name: Zip build
         uses: thedoctor0/zip-release@master
         with:
-          filename: text-fixtures.zip
-          path: ./tests.zip
+          filename: texts.zip
+          path: ./tests
       - name: Share artifact inside workflow
         uses: actions/upload-artifact@v2
         with:
