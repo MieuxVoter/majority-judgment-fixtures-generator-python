@@ -40,25 +40,7 @@ jobs:
         with:
           name: plugin-build
           path: ./tests.zip
-            
-  release:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      # Download previously shared build
-      - name: Get artifact
-        uses: actions/download-artifact@v1
-        with:
-          name: plugin-build
-      # Upload as an artifact of the current workflow
-      - name: Upload build zip artifact
-        uses: actions/upload-artifact@v1
-        with:
-          name: tests.zip
-          path: tests.zip
-      # Make official GitHub release which will trigger
-      # sending the mail with link for access
-      - name: Release
+     - name: Release
         uses: ncipollo/release-action@v1
         with:
           artifacts: tests.zip
