@@ -1,5 +1,8 @@
 # Majority Judgment Data testing
 
+[![MIT](https://img.shields.io/github/license/MieuxVoter/majority-judgment-library-python?style=for-the-badge)](./LICENSE)
+[![Join the Discord chat at https://discord.gg/rAAQG9S](https://img.shields.io/discord/705322981102190593.svg?style=for-the-badge)](https://discord.gg/rAAQG9S)
+
 This is generating a set of `*.yml` files for testing librairies.
 The set of files can be find on the Releases.
 
