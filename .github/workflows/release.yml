@@ -18,6 +18,8 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Clone repository
         uses: actions/checkout@v3
@@ -35,13 +37,11 @@ jobs:
         with:
           filename: texts.zip
           path: ./tests
-      - name: Share artifact inside workflow
-        uses: actions/upload-artifact@v2
-        with:
-          name: plugin-build
-          path: ./tests.zip
       - name: Release
-        uses: ncipollo/release-action@v1
+        uses: "marvinpinto/action-automatic-releases@latest"
         with:
-          artifacts: tests.zip
-          token: ${{ secrets.GITHUB_TOKEN }}
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Test YAML files"
+          files: ./tests.zip
